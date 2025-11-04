@@ -90,10 +90,19 @@ def val_one_epoch(test_loader,
         f1_or_dsc = float(2 * TP) / float(2 * TP + FP + FN) if float(2 * TP + FP + FN) != 0 else 0
         miou = float(TP) / float(TP + FP + FN) if float(TP + FP + FN) != 0 else 0
 
-        log_info = f'val epoch: {epoch}, loss: {np.mean(loss_list):.4f}, miou: {miou}, f1_or_dsc: {f1_or_dsc}, accuracy: {accuracy}, \
-                specificity: {specificity}, sensitivity: {sensitivity}, confusion_matrix: {confusion}'
+        log_info = (
+            f'val epoch: {epoch}, loss: {np.mean(loss_list):.4f}, '
+            f'iou: {miou:.4f}, dice: {f1_or_dsc:.4f}, accuracy: {accuracy:.4f}, '
+            f'specificity: {specificity:.4f}, sensitivity: {sensitivity:.4f}, '
+            f'confusion_matrix: {confusion}'
+        )
         print(log_info)
         logger.info(log_info)
+
+        # log_info = f'val epoch: {epoch}, loss: {np.mean(loss_list):.4f}, miou: {miou}, f1_or_dsc: {f1_or_dsc}, accuracy: {accuracy}, \
+        #         specificity: {specificity}, sensitivity: {sensitivity}, confusion_matrix: {confusion}'
+        # print(log_info)
+        # logger.info(log_info)
 
     else:
         log_info = f'val epoch: {epoch}, loss: {np.mean(loss_list):.4f}'
@@ -148,9 +157,18 @@ def test_one_epoch(test_loader,
             log_info = f'test_datasets_name: {test_data_name}'
             print(log_info)
             logger.info(log_info)
-        log_info = f'test of best model, loss: {np.mean(loss_list):.4f},miou: {miou}, f1_or_dsc: {f1_or_dsc}, accuracy: {accuracy}, \
-                specificity: {specificity}, sensitivity: {sensitivity}, confusion_matrix: {confusion}'
+        # log_info = f'test of best model, loss: {np.mean(loss_list):.4f},miou: {miou}, f1_or_dsc: {f1_or_dsc}, accuracy: {accuracy}, \
+        #         specificity: {specificity}, sensitivity: {sensitivity}, confusion_matrix: {confusion}'
+        # print(log_info)
+        # logger.info(log_info)
+        log_info = (
+            f'test of best model, loss: {np.mean(loss_list):.4f}, '
+            f'iou: {miou:.4f}, dice: {f1_or_dsc:.4f}, accuracy: {accuracy:.4f}, '
+            f'specificity: {specificity:.4f}, sensitivity: {sensitivity:.4f}, '
+            f'confusion_matrix: {confusion}'
+        )
         print(log_info)
         logger.info(log_info)
+
 
     return np.mean(loss_list)

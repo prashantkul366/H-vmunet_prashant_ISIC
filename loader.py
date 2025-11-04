@@ -81,3 +81,96 @@ class isic_loader(Dataset):
     def __len__(self):
         return len(self.data)
     
+
+
+def _to_tensor(img_np):  # HWC [0,1] -> CHW float32
+    t = torch.from_numpy(img_np.astype(np.float32))
+    if t.ndim == 2:        # H W  -> 1 H W
+        t = t.unsqueeze(0)
+    else:                  # H W C -> C H W
+        t = t.permute(2, 0, 1)
+    return t
+
+class Dataset(Dataset):
+    """
+    Generic file-based loader for roots like:
+      root/
+        train/ images/, masks/
+        val/   images/, masks/
+        test/  images/, masks/
+    Works with both ISIC-style and BUSI-style folders.
+    """
+    def __init__(self, root, split="train",
+                 images_dir="images", masks_dir="masks",
+                 train_augs=True):
+        super().__init__()
+        self.root = root
+        self.split = split
+        self.images_dir = images_dir
+        self.masks_dir = masks_dir
+        self.train_augs = train_augs and (split == "train")
+
+        base = os.path.join(root, split)
+        img_dir = os.path.join(base, images_dir)
+        msk_dir = os.path.join(base, masks_dir)
+        if not os.path.isdir(img_dir):
+            raise FileNotFoundError(f"Images folder not found: {img_dir}")
+        if not os.path.isdir(msk_dir):
+            raise FileNotFoundError(f"Masks folder not found: {msk_dir}")
+
+        # match by stem
+        def stems(d):
+            return {os.path.splitext(f)[0]: f
+                    for f in os.listdir(d)
+                    if f.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff"))}
+
+        imgs = stems(img_dir)
+        msks = stems(msk_dir)
+        common = sorted(list(set(imgs.keys()) & set(msks.keys())))
+        if len(common) == 0:
+            raise RuntimeError(f"No matching image/mask pairs in {img_dir} and {msk_dir}")
+
+        self.pairs = [(os.path.join(img_dir, imgs[k]), os.path.join(msk_dir, msks[k]))
+                      for k in common]
+
+    def __len__(self):
+        return len(self.pairs)
+
+    def _random_rot_flip(self, image, label):
+        k = np.random.randint(0, 4)
+        image = np.rot90(image, k)
+        label = np.rot90(label, k)
+        axis = np.random.randint(0, 2)
+        image = np.flip(image, axis=axis).copy()
+        label = np.flip(label, axis=axis).copy()
+        return image, label
+
+    def _random_rotate(self, image, label):
+        angle = np.random.randint(20, 80)  # keep your original range
+        image = ndimage.rotate(image, angle, order=1, reshape=False)  # bilinear for image
+        label = ndimage.rotate(label, angle, order=0, reshape=False)  # nearest for mask
+        return image, label
+
+    def __getitem__(self, idx):
+        img_path, msk_path = self.pairs[idx]
+
+        # Load
+        img = Image.open(img_path).convert("RGB")
+        msk = Image.open(msk_path).convert("L")  # single-channel mask
+
+        # To numpy, [0,1]
+        img = np.asarray(img, dtype=np.float32) / 255.0         # H W 3
+        msk = (np.asarray(msk, dtype=np.float32) > 127).astype(np.float32)  # H W in {0,1}
+
+        # Augs
+        if self.train_augs:
+            if random.random() > 0.5:
+                img, msk = self._random_rot_flip(img, msk)
+            if random.random() > 0.5:
+                img, msk = self._random_rotate(img, msk)
+
+        # To tensors: img C H W (3), mask 1 H W
+        img_t = _to_tensor(img)          # [3,H,W]
+        msk_t = _to_tensor(msk)          # [1,H,W]
+
+        return img_t, msk_t

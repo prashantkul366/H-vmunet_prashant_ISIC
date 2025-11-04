@@ -19,13 +19,16 @@ class setting_config:
 
     test_weights = ''
 
-    datasets = 'ISIC2017'
-    if datasets == 'ISIC2017':
-        data_path = ''
+    datasets = 'ISIC2018'
+    # datasets = 'BUSI'
+    if datasets == 'ISIC2018':
+        data_path = '/content/drive/MyDrive/Amit-Paper3/UNeXt-pytorch/inputs/isic2'
     elif datasets == 'Spleen':
         data_path = ''
     elif datasets == 'CVC-ClinicDB':
         data_path = ''
+    elif datasets == 'BUSI':
+        data_path = '/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20'
     else:
         raise Exception('datasets in not right!')
 
@@ -48,9 +51,12 @@ class setting_config:
     work_dir = 'results/' + network + '_' + datasets + '_' + datetime.now().strftime('%A_%d_%B_%Y_%Hh_%Mm_%Ss') + '/'
 
     print_interval = 20
-    val_interval = 30
+    val_interval = 1
     save_interval = 100
     threshold = 0.5
+    
+    save_best_metric = 'dice'   
+    early_stop_patience = 100   
 
 
     opt = 'AdamW'

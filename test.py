@@ -15,6 +15,7 @@ from configs.config_setting import setting_config
 
 import warnings
 warnings.filterwarnings("ignore")
+from thop import profile, clever_format
 
 
 
@@ -57,6 +58,31 @@ def main(config):
                     drop_path_rate=model_cfg['drop_path_rate'])
     
     model = torch.nn.DataParallel(model.cuda(), device_ids=gpu_ids, output_device=gpu_ids[0])
+
+
+    # ---------- Model complexity (Params & GFLOPs) ----------
+    model.eval()
+    dummy = torch.zeros(
+        1,
+        config.input_channels,
+        config.input_size_h,
+        config.input_size_w,
+        device='cuda'
+    )
+    with torch.no_grad():
+        macs, params = profile(model.module, inputs=(dummy,), verbose=False)
+
+    # Convert to readable strings
+    macs_str, params_str = clever_format([macs, params], "%.3f")  # e.g., "12.345 GMACs", "25.678 MParams"
+
+    # If you want plain numbers too:
+    gmacs = macs / 1e9
+    gflops = 2.0 * gmacs  # FLOPs ≈ 2 * MACs
+
+
+    print(f"#----------Model complexity----------#")
+    print(f"Params: {params_str} | MACs: {macs_str} | GFLOPs (≈2*MACs): {gflops:.3f} GFLOPs")
+    logger.info(f"Params: {params_str} | MACs: {macs_str} | GFLOPs (≈2*MACs): {gflops:.3f} GFLOPs")
 
 
     print('#----------Preparing dataset----------#')

@@ -23,6 +23,7 @@ def main(config):
     log_dir = os.path.join(config.work_dir, 'log')
     checkpoint_dir = os.path.join(config.work_dir, 'checkpoints')
     resume_model = os.path.join(checkpoint_dir, 'latest.pth')
+    best_dice = checkpoint.get('best_dice', best_dice)
     outputs = os.path.join(config.work_dir, 'outputs')
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
@@ -48,20 +49,27 @@ def main(config):
 
 
     print('#----------Preparing dataset----------#')
-    train_dataset = isic_loader(path_Data = config.data_path, train = True)
+    # train_dataset = isic_loader(path_Data = config.data_path, train = True)
+    root = config.data_path
+    train_dataset = Dataset(root, split="train", images_dir="images", masks_dir="masks", train_augs=True)
     train_loader = DataLoader(train_dataset,
                                 batch_size=config.batch_size, 
                                 shuffle=True,
                                 pin_memory=True,
                                 num_workers=config.num_workers)
-    val_dataset = isic_loader(path_Data = config.data_path, train = False)
+    
+    # val_dataset = isic_loader(path_Data = config.data_path, train = False)
+    val_split = "val"
+    val_dataset = Dataset(root, split=val_split, images_dir="images", masks_dir="masks", train_augs=False)
+
     val_loader = DataLoader(val_dataset,
                                 batch_size=1,
                                 shuffle=False,
                                 pin_memory=True, 
                                 num_workers=config.num_workers,
                                 drop_last=True)
-    test_dataset = isic_loader(path_Data = config.data_path, train = False, Test = True)
+    # test_dataset = isic_loader(path_Data = config.data_path, train = False, Test = True)
+    test_dataset = Dataset(root, split="test", images_dir="images", masks_dir="masks", train_augs=False)
     test_loader = DataLoader(test_dataset,
                                 batch_size=1,
                                 shuffle=False,
@@ -102,6 +110,9 @@ def main(config):
     start_epoch = 1
     min_epoch = 1
 
+    patience = 100            
+    best_dice = -1.0
+    epochs_no_improve = 0
 
 
 
@@ -140,47 +151,91 @@ def main(config):
             scaler=scaler
         )
 
-        loss = val_one_epoch(
-                val_loader,
-                model,
-                criterion,
-                epoch,
-                logger,
-                config
-            )
+        # loss = val_one_epoch(
+        #         val_loader,
+        #         model,
+        #         criterion,
+        #         epoch,
+        #         logger,
+        #         config
+        #     )
+
+        val_loss, val_dice = val_one_epoch(
+            val_loader,
+            model,
+            criterion,
+            epoch,
+            logger,
+            config
+        )
 
 
-        if loss < min_loss:
+        # if loss < min_loss:
+        #     torch.save(model.module.state_dict(), os.path.join(checkpoint_dir, 'best.pth'))
+        #     min_loss = loss
+        #     min_epoch = epoch
+
+        # Save best by Dice
+        improved = val_dice > best_dice + 1e-8
+        if improved:
+            best_dice = val_dice
+            epochs_no_improve = 0
             torch.save(model.module.state_dict(), os.path.join(checkpoint_dir, 'best.pth'))
-            min_loss = loss
-            min_epoch = epoch
+        else:
+            epochs_no_improve += 1
+
+        print_msg = f'Validation Dice: {val_dice:.4f}, Best Dice: {best_dice:.4f} (at epoch {min_epoch}) epochs_no_improve: {epochs_no_improve}'
+        print(print_msg)
+        # torch.save(
+        #     {
+        #         'epoch': epoch,
+        #         'min_loss': min_loss,
+        #         'min_epoch': min_epoch,
+        #         'loss': loss,
+        #         'model_state_dict': model.module.state_dict(),
+        #         'optimizer_state_dict': optimizer.state_dict(),
+        #         'scheduler_state_dict': scheduler.state_dict(),
+        #     }, os.path.join(checkpoint_dir, 'latest.pth')) 
 
         torch.save(
             {
                 'epoch': epoch,
                 'min_loss': min_loss,
                 'min_epoch': min_epoch,
-                'loss': loss,
+                'loss': val_loss,
+                'best_dice': best_dice,
                 'model_state_dict': model.module.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler_state_dict': scheduler.state_dict(),
-            }, os.path.join(checkpoint_dir, 'latest.pth')) 
+            }, os.path.join(checkpoint_dir, 'latest.pth')
+        )
+
+        if epochs_no_improve >= patience:
+            stop_msg = (f"Early stopping at epoch {epoch} "
+                        f"(no Dice improvement for {patience} validation epochs). "
+                        f"Best Dice: {best_dice:.4f}")
+            print(stop_msg)
+            logger.info(stop_msg)
+            break
 
     if os.path.exists(os.path.join(checkpoint_dir, 'best.pth')):
         print('#----------Testing----------#')
-        best_weight = torch.load(config.work_dir + 'checkpoints/best.pth', map_location=torch.device('cpu'))
+        best_weight = torch.load(os.path.join(checkpoint_dir, 'best.pth'),
+                                 map_location=torch.device('cpu'))
         model.module.load_state_dict(best_weight)
         loss = test_one_epoch(
-                test_loader,
-                model,
-                criterion,
-                logger,
-                config,
-            )
+            test_loader,
+            model,
+            criterion,
+            logger,
+            config,
+        )
+        # include min_epoch and min_loss in the filename (from training tracking)
         os.rename(
             os.path.join(checkpoint_dir, 'best.pth'),
             os.path.join(checkpoint_dir, f'best-epoch{min_epoch}-loss{min_loss:.4f}.pth')
-        )      
+        )
+    
 
 
 if __name__ == '__main__':
