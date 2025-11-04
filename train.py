@@ -23,7 +23,7 @@ def main(config):
     log_dir = os.path.join(config.work_dir, 'log')
     checkpoint_dir = os.path.join(config.work_dir, 'checkpoints')
     resume_model = os.path.join(checkpoint_dir, 'latest.pth')
-    best_dice = checkpoint.get('best_dice', best_dice)
+    # best_dice = checkpoint.get('best_dice', best_dice)
     outputs = os.path.join(config.work_dir, 'outputs')
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)

@@ -72,10 +72,8 @@ def main(config):
     with torch.no_grad():
         macs, params = profile(model.module, inputs=(dummy,), verbose=False)
 
-    # Convert to readable strings
-    macs_str, params_str = clever_format([macs, params], "%.3f")  # e.g., "12.345 GMACs", "25.678 MParams"
+    macs_str, params_str = clever_format([macs, params], "%.3f") 
 
-    # If you want plain numbers too:
     gmacs = macs / 1e9
     gflops = 2.0 * gmacs  # FLOPs ≈ 2 * MACs
 
