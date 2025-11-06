@@ -50,8 +50,13 @@ def main(config):
 
     print('#----------Preparing dataset----------#')
     # train_dataset = isic_loader(path_Data = config.data_path, train = True)
+    H, W = config.input_size_h, config.input_size_w
     root = config.data_path
-    train_dataset = Dataset(root, split="train", images_dir="images", masks_dir="masks", train_augs=True)
+    train_dataset = Dataset(
+                        root=config.data_path, split="train",
+                        images_dir="images", masks_dir="masks",
+                        train_augs=True, target_size=(H, W)
+                    )
     train_loader = DataLoader(train_dataset,
                                 batch_size=config.batch_size, 
                                 shuffle=True,
@@ -60,8 +65,11 @@ def main(config):
     
     # val_dataset = isic_loader(path_Data = config.data_path, train = False)
     val_split = "val"
-    val_dataset = Dataset(root, split=val_split, images_dir="images", masks_dir="masks", train_augs=False)
-
+    val_dataset = Dataset(
+                    root=config.data_path, split="val",
+                    images_dir="images", masks_dir="masks",
+                    train_augs=False, target_size=(H, W)
+                )
     val_loader = DataLoader(val_dataset,
                                 batch_size=1,
                                 shuffle=False,
@@ -69,7 +77,11 @@ def main(config):
                                 num_workers=config.num_workers,
                                 drop_last=True)
     # test_dataset = isic_loader(path_Data = config.data_path, train = False, Test = True)
-    test_dataset = Dataset(root, split="test", images_dir="images", masks_dir="masks", train_augs=False)
+    test_dataset = Dataset(
+                        root=config.data_path, split="test",
+                        images_dir="images", masks_dir="masks",
+                        train_augs=False, target_size=(H, W)
+                    )
     test_loader = DataLoader(test_dataset,
                                 batch_size=1,
                                 shuffle=False,

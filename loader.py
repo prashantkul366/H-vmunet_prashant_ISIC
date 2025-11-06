@@ -11,6 +11,10 @@ from torchvision import transforms
 from scipy import ndimage
 from utils import *
 
+from torchvision.transforms import functional as TF
+from torchvision.transforms import InterpolationMode
+
+
 
 # ===== normalize over the dataset 
 def dataset_normalized(imgs):
@@ -101,14 +105,17 @@ class Dataset(Dataset):
     Works with both ISIC-style and BUSI-style folders.
     """
     def __init__(self, root, split="train",
-                 images_dir="images", masks_dir="masks",
-                 train_augs=True):
+             images_dir="images", masks_dir="masks",
+             train_augs=True,
+             target_size=(256, 256)):     
+        super().__init__()
         super().__init__()
         self.root = root
         self.split = split
         self.images_dir = images_dir
         self.masks_dir = masks_dir
         self.train_augs = train_augs and (split == "train")
+        self.target_size = target_size
 
         base = os.path.join(root, split)
         
@@ -158,23 +165,28 @@ class Dataset(Dataset):
     def __getitem__(self, idx):
         img_path, msk_path = self.pairs[idx]
 
-        # Load
+        # Load PIL
         img = Image.open(img_path).convert("RGB")
-        msk = Image.open(msk_path).convert("L")  # single-channel mask
+        msk = Image.open(msk_path).convert("L")
+
+        # --- RESIZE to fixed size ---
+        H, W = self.target_size
+        img = TF.resize(img, (H, W), interpolation=InterpolationMode.BILINEAR, antialias=True)
+        msk = TF.resize(msk, (H, W), interpolation=InterpolationMode.NEAREST)
 
         # To numpy, [0,1]
-        img = np.asarray(img, dtype=np.float32) / 255.0         # H W 3
-        msk = (np.asarray(msk, dtype=np.float32) > 127).astype(np.float32)  # H W in {0,1}
+        img = np.asarray(img, dtype=np.float32) / 255.0
+        msk = (np.asarray(msk, dtype=np.float32) > 127).astype(np.float32)
 
-        # Augs
+        # Augs (keep simple to avoid shape changes)
         if self.train_augs:
             if random.random() > 0.5:
-                img, msk = self._random_rot_flip(img, msk)
-            if random.random() > 0.5:
-                img, msk = self._random_rotate(img, msk)
+                img = np.ascontiguousarray(np.flip(img, axis=1))
+                msk = np.ascontiguousarray(np.flip(msk, axis=1))
 
-        # To tensors: img C H W (3), mask 1 H W
-        img_t = _to_tensor(img)          # [3,H,W]
-        msk_t = _to_tensor(msk)          # [1,H,W]
+        # To tensors
+        img_t = torch.from_numpy(img).permute(2, 0, 1).contiguous()   # [3,H,W]
+        msk_t = torch.from_numpy(msk).unsqueeze(0).contiguous()       # [1,H,W]
 
         return img_t, msk_t
+
