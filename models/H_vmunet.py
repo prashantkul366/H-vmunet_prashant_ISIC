@@ -256,7 +256,8 @@ class H_vmunet(nn.Module):
         self.pretrained = pretrained
         self.use_checkpoint = use_checkpoint
         self.bridge = bridge
-        
+
+        print('H_vmunet initated')  
         self.encoder1 = nn.Sequential(
             nn.Conv2d(input_channels, c_list[0], 3, stride=1, padding=1),
         )

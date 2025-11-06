@@ -111,8 +111,12 @@ class Dataset(Dataset):
         self.train_augs = train_augs and (split == "train")
 
         base = os.path.join(root, split)
+        
         img_dir = os.path.join(base, images_dir)
         msk_dir = os.path.join(base, masks_dir)
+        print(f"Loading {split} data from {base}...")
+        print(f"  Images: {img_dir} with length {len(os.listdir(img_dir))} files")
+        print(f"  Masks:  {msk_dir} with length {len(os.listdir(msk_dir))} files")
         if not os.path.isdir(img_dir):
             raise FileNotFoundError(f"Images folder not found: {img_dir}")
         if not os.path.isdir(msk_dir):
