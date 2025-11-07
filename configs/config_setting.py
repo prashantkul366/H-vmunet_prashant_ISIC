@@ -19,8 +19,8 @@ class setting_config:
 
     test_weights = ''
 
-    # datasets = 'ISIC2018'
-    datasets = 'BUSI'
+    datasets = 'ISIC2018'
+    # datasets = 'BUSI'
     if datasets == 'ISIC2018':
         data_path = '/content/drive/MyDrive/Amit-Paper3/UNeXt-pytorch/inputs/isic2'
     elif datasets == 'Spleen':
