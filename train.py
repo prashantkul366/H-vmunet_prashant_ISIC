@@ -64,9 +64,16 @@ def main(config):
                                 num_workers=config.num_workers)
     
     # val_dataset = isic_loader(path_Data = config.data_path, train = False)
+    # val_split = "val"
+    # val_dataset = Dataset(
+    #                 root=config.data_path, split="val",
+    #                 images_dir="images", masks_dir="masks",
+    #                 train_augs=False, target_size=(H, W)
+    #             )
+    
     val_split = "val"
     val_dataset = Dataset(
-                    root=config.data_path, split="val",
+                    root=config.data_path, split="test",
                     images_dir="images", masks_dir="masks",
                     train_augs=False, target_size=(H, W)
                 )
