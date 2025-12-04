@@ -20,6 +20,7 @@ def main(config):
 
     print('#----------Creating logger----------#')
     sys.path.append(config.work_dir + '/')
+    print(f'work dir: {config.work_dir}')
     log_dir = os.path.join(config.work_dir, 'log')
     checkpoint_dir = os.path.join(config.work_dir, 'checkpoints')
     resume_model = os.path.join(checkpoint_dir, 'latest.pth')
@@ -200,6 +201,7 @@ def main(config):
             best_dice = val_dice
             epochs_no_improve = 0
             torch.save(model.module.state_dict(), os.path.join(checkpoint_dir, 'best.pth'))
+            print(f'Validation Dice improved to {best_dice:.4f}, saving model to {os.path.join(checkpoint_dir, "best.pth")}')
         else:
             epochs_no_improve += 1
 
