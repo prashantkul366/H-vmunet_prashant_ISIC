@@ -23,6 +23,7 @@ def save_pred_mask_only(pred_np, idx, save_dir, threshold=0.5):
 
     # convert to image and save as PNG (lossless, "high quality")
     im = Image.fromarray(mask_bin)
+    print("Saving mask:", os.path.join(save_dir, f"{idx:04d}_mask.png"))
     im.save(os.path.join(save_dir, f"{idx:04d}_mask.png"))
 
 
