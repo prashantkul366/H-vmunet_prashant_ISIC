@@ -188,5 +188,6 @@ class Dataset(Dataset):
         img_t = torch.from_numpy(img).permute(2, 0, 1).contiguous()   # [3,H,W]
         msk_t = torch.from_numpy(msk).unsqueeze(0).contiguous()       # [1,H,W]
 
-        return img_t, msk_t
+        img_name = os.path.basename(img_path).split('.')[0]
+        return img_t, msk_t , img_name
 

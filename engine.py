@@ -23,8 +23,12 @@ def save_pred_mask_only(pred_np, idx, save_dir, threshold=0.5):
 
     # convert to image and save as PNG (lossless, "high quality")
     im = Image.fromarray(mask_bin)
-    print("Saving mask:", os.path.join(save_dir, f"{idx:04d}_mask.png"))
-    im.save(os.path.join(save_dir, f"{idx:04d}_mask.png"))
+    # print("Saving mask:", os.path.join(save_dir, f"{idx:04d}_mask.png"))
+    # im.save(os.path.join(save_dir, f"{idx:04d}_mask.png"))
+
+    save_path = os.path.join(save_dir, f"{idx}.png")
+    print("Saving mask:", save_path)
+    im.save(save_path)
 
 
 def train_one_epoch(train_loader,
@@ -201,7 +205,8 @@ def test_one_epoch(test_loader,
     print("#----------Testing----------#")
     with torch.no_grad():
         for i, data in enumerate(tqdm(test_loader)):
-            img, msk = data
+            # img, msk = data
+            img, msk, filename = data
             img, msk = img.cuda(non_blocking=True).float(), msk.cuda(non_blocking=True).float()
             out = model(img)
             loss = criterion(out, msk)
@@ -218,7 +223,7 @@ def test_one_epoch(test_loader,
             os.makedirs(save_dir, exist_ok=True)
             save_pred_mask_only(
                 pred_np=out,          # numpy (H, W) or (1, H, W)
-                idx=i,
+                idx=filename[0],
                 save_dir=save_dir,
                 threshold=config.threshold,
             )
