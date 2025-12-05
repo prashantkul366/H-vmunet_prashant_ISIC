@@ -198,6 +198,7 @@ def test_one_epoch(test_loader,
     preds = []
     gts = []
     loss_list = []
+    print("#----------Testing----------#")
     with torch.no_grad():
         for i, data in enumerate(tqdm(test_loader)):
             img, msk = data
@@ -211,6 +212,7 @@ def test_one_epoch(test_loader,
                 out = out[0]
             out = out.squeeze(1).cpu().detach().numpy()
             preds.append(out) 
+            print(f"Saving prediction mask for index: {i}")
             # save_imgs(img, msk, out, i, config.work_dir + 'outputs/', config.datasets, config.threshold, test_data_name=test_data_name)
             save_dir = os.path.join(config.work_dir, "pred_masks")
             os.makedirs(save_dir, exist_ok=True)
@@ -221,6 +223,7 @@ def test_one_epoch(test_loader,
                 threshold=config.threshold,
             )
 
+        print("#----------Calculating metrics----------#")
         preds = np.array(preds).reshape(-1)
         gts = np.array(gts).reshape(-1)
 
