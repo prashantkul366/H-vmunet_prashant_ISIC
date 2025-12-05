@@ -28,6 +28,7 @@ def main(config):
     # resume_model = os.path.join('')
     # resume_model = '/content/drive/MyDrive/Prashant/H-vmunet_prashant_ISIC/results/H_vmunet_ISIC2018_Thursday_04_December_2025_06h_08m_08s/checkpoints/best.pth'
     # resume_model = '/content/drive/MyDrive/Prashant/H-vmunet_prashant_ISIC/results/H_vmunet_ISIC2018_Thursday_04_December_2025_06h_08m_08s/checkpoints/best.pth'
+    resume_model = '/content/drive/MyDrive/Prashant/H-vmunet_prashant_ISIC/results/H_vmunet_BUSI_Friday_05_December_2025_07h_20m_32s/checkpoints/best.pth'
     outputs = os.path.join(config.work_dir, 'outputs')
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
@@ -119,7 +120,7 @@ def main(config):
 
     H, W = config.input_size_h, config.input_size_w
     test_dataset = Dataset(
-                        root=config.data_path, split="val",
+                        root=config.data_path, split="test",
                         images_dir="images", masks_dir="masks",
                         train_augs=False, target_size=(H, W)
                     )
