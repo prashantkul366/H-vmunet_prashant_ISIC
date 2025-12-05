@@ -85,7 +85,20 @@ def main(config):
 
 
     print('#----------Preparing dataset----------#')
-    test_dataset = isic_loader(path_Data = config.data_path, train = False, Test = True)
+    # test_dataset = isic_loader(path_Data = config.data_path, train = False, Test = True)
+    # test_loader = DataLoader(test_dataset,
+    #                             batch_size=1,
+    #                             shuffle=False,
+    #                             pin_memory=True, 
+    #                             num_workers=config.num_workers,
+    #                             drop_last=True)
+
+    H, W = config.input_size_h, config.input_size_w
+    test_dataset = Dataset(
+                        root=config.data_path, split="test",
+                        images_dir="images", masks_dir="masks",
+                        train_augs=False, target_size=(H, W)
+                    )
     test_loader = DataLoader(test_dataset,
                                 batch_size=1,
                                 shuffle=False,
