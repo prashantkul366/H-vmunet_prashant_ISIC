@@ -4,6 +4,26 @@ import torch
 from torch.cuda.amp import autocast as autocast
 from sklearn.metrics import confusion_matrix
 from utils import save_imgs
+import os
+from PIL import Image
+
+def save_pred_mask_only(pred_np, idx, save_dir, threshold=0.5):
+    """
+    pred_np: numpy array from model (H, W) or (1, H, W)
+    saves a binary 0/255 PNG mask as <idx>.png
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    # squeeze channel dimension if present
+    if pred_np.ndim == 3 and pred_np.shape[0] == 1:
+        pred_np = pred_np[0]
+
+    # binarize
+    mask_bin = (pred_np >= threshold).astype(np.uint8) * 255  # 0 or 255
+
+    # convert to image and save as PNG (lossless, "high quality")
+    im = Image.fromarray(mask_bin)
+    im.save(os.path.join(save_dir, f"{idx:04d}_mask.png"))
 
 
 def train_one_epoch(train_loader,
@@ -133,6 +153,7 @@ def val_one_epoch(test_loader,
                 out = out[0]
             gts.append(msk.squeeze(1).cpu().numpy())
             preds.append(out.squeeze(1).cpu().numpy())
+            
 
     # ---- compute metrics every time ----
     preds = np.array(preds).reshape(-1)
@@ -189,7 +210,15 @@ def test_one_epoch(test_loader,
                 out = out[0]
             out = out.squeeze(1).cpu().detach().numpy()
             preds.append(out) 
-            save_imgs(img, msk, out, i, config.work_dir + 'outputs/', config.datasets, config.threshold, test_data_name=test_data_name)
+            # save_imgs(img, msk, out, i, config.work_dir + 'outputs/', config.datasets, config.threshold, test_data_name=test_data_name)
+            save_dir = os.path.join(config.work_dir, "pred_masks")
+            os.makedirs(save_dir, exist_ok=True)
+            save_pred_mask_only(
+                pred_np=out,          # numpy (H, W) or (1, H, W)
+                idx=i,
+                save_dir=save_dir,
+                threshold=config.threshold,
+            )
 
         preds = np.array(preds).reshape(-1)
         gts = np.array(gts).reshape(-1)
