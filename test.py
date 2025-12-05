@@ -62,7 +62,30 @@ def main(config):
 
 
     # ---------- Model complexity (Params & GFLOPs) ----------
-    model.eval()
+    # model.eval()
+    # dummy = torch.zeros(
+    #     1,
+    #     config.input_channels,
+    #     config.input_size_h,
+    #     config.input_size_w,
+    #     device='cuda'
+    # )
+    # with torch.no_grad():
+    #     macs, params = profile(model.module, inputs=(dummy,), verbose=False)
+
+    
+    # ---------- Model complexity (Params & GFLOPs) ----------
+    model_for_profile = H_vmunet(
+        num_classes=model_cfg['num_classes'], 
+        input_channels=model_cfg['input_channels'], 
+        c_list=model_cfg['c_list'], 
+        split_att=model_cfg['split_att'], 
+        bridge=model_cfg['bridge'],
+        drop_path_rate=model_cfg['drop_path_rate']
+    ).cuda()
+
+    model_for_profile.eval()
+
     dummy = torch.zeros(
         1,
         config.input_channels,
@@ -70,11 +93,11 @@ def main(config):
         config.input_size_w,
         device='cuda'
     )
+
     with torch.no_grad():
-        macs, params = profile(model.module, inputs=(dummy,), verbose=False)
-
+        macs, params = profile(model_for_profile, inputs=(dummy,), verbose=False)
+        
     macs_str, params_str = clever_format([macs, params], "%.3f") 
-
     gmacs = macs / 1e9
     gflops = 2.0 * gmacs  # FLOPs ≈ 2 * MACs
 
@@ -125,6 +148,7 @@ def main(config):
     print('#----------Testing----------#')
     best_weight = torch.load(resume_model, map_location=torch.device('cpu'))
     model.module.load_state_dict(best_weight)
+
     loss = test_one_epoch(
             test_loader,
             model,
