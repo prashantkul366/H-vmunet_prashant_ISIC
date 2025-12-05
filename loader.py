@@ -189,5 +189,7 @@ class Dataset(Dataset):
         msk_t = torch.from_numpy(msk).unsqueeze(0).contiguous()       # [1,H,W]
 
         img_name = os.path.basename(img_path).split('.')[0]
-        return img_t, msk_t , img_name
+
+        # return img_t, msk_t , img_name
+        return img_t, msk_t
 
