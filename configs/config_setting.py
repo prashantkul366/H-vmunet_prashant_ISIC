@@ -19,14 +19,16 @@ class setting_config:
 
     test_weights = ''
 
-    datasets = 'ISIC2018'
+    # datasets = 'ISIC2018'
     # datasets = 'BUSI'
+    datasets = 'CVC-ClinicDB_80_20'
+    
     if datasets == 'ISIC2018':
         data_path = '/content/drive/MyDrive/Amit-Paper3/UNeXt-pytorch/inputs/isic2'
     elif datasets == 'Spleen':
         data_path = ''
-    elif datasets == 'CVC-ClinicDB':
-        data_path = ''
+    elif datasets == 'CVC-ClinicDB_80_20':
+        data_path = '/content/drive/MyDrive/Prashant/research_datasets/CVC/CVC-ClinicDB_80_20'
     elif datasets == 'BUSI':
         data_path = '/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20'
     else:
