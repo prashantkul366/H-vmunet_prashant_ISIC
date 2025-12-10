@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from scipy import ndimage
 from utils import *
-
+import cv2
 from torchvision.transforms import functional as TF
 from torchvision.transforms import InterpolationMode
 
@@ -166,7 +166,8 @@ class Dataset(Dataset):
         img_path, msk_path = self.pairs[idx]
 
         # Load PIL
-        img = Image.open(img_path).convert("RGB")
+        # img = Image.open(img_path).convert("RGB")
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         msk = Image.open(msk_path).convert("L")
 
         # --- RESIZE to fixed size ---
