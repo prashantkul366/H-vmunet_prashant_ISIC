@@ -14,6 +14,54 @@ import cv2
 from torchvision.transforms import functional as TF
 from torchvision.transforms import InterpolationMode
 
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+import numpy as np
+
+
+def _open_image_with_tifffile(path):
+    """
+    Robust open for images (handles many TIFF flavours).
+    Returns a PIL.Image in RGB (for images) or L (if caller later converts).
+    """
+    try:
+        # try tifffile first (best for tiffs)
+        import tifffile
+        arr = tifffile.imread(path)  # numpy array (H,W) or (H,W,3) or (H,W,4)
+        if arr is None:
+            raise RuntimeError("tifffile returned None")
+        # If grayscale, convert to 3-channel
+        if arr.ndim == 2:
+            arr = np.stack([arr, arr, arr], axis=-1)
+        # If more than 3 channels (e.g., RGBA), drop extra channels
+        if arr.shape[-1] > 3:
+            arr = arr[..., :3]
+        return Image.fromarray(arr).convert("RGB")
+    except Exception:
+        # fallback: try imageio.v3
+        try:
+            import imageio.v3 as iio
+            arr = iio.imread(path)
+            if arr.ndim == 2:
+                arr = np.stack([arr, arr, arr], axis=-1)
+            if arr.shape[-1] > 3:
+                arr = arr[..., :3]
+            return Image.fromarray(arr).convert("RGB")
+        except Exception:
+            # fallback: try cv2
+            try:
+                import cv2
+                im_cv = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+                if im_cv is None:
+                    raise RuntimeError("cv2.imread returned None")
+                # cv2 loads BGR; convert to RGB
+                if im_cv.ndim == 2:
+                    im_cv = np.stack([im_cv, im_cv, im_cv], axis=-1)
+                else:
+                    im_cv = cv2.cvtColor(im_cv, cv2.COLOR_BGR2RGB)
+                return Image.fromarray(im_cv).convert("RGB")
+            except Exception as e:
+                raise RuntimeError(f"All readers failed for {path}: {e}")
 
 
 # ===== normalize over the dataset 
@@ -166,9 +214,11 @@ class Dataset(Dataset):
         img_path, msk_path = self.pairs[idx]
 
         # Load PIL
-        img = Image.open(img_path).convert("RGB")
+        # img = Image.open(img_path).convert("RGB")
+        img = _open_image_with_tifffile(img_path)  
         # img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        msk = Image.open(msk_path).convert("L")
+        # msk = Image.open(msk_path).convert("L")
+        msk = _open_image_with_tifffile(msk_path).convert("L")
 
         # --- RESIZE to fixed size ---
         H, W = self.target_size
