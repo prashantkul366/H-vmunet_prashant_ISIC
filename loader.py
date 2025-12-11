@@ -166,8 +166,8 @@ class Dataset(Dataset):
         img_path, msk_path = self.pairs[idx]
 
         # Load PIL
-        # img = Image.open(img_path).convert("RGB")
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = Image.open(img_path).convert("RGB")
+        # img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         msk = Image.open(msk_path).convert("L")
 
         # --- RESIZE to fixed size ---
