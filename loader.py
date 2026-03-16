@@ -220,8 +220,8 @@ class Dataset(Dataset):
         # normalize image
         img = (img - img.min()) / (img.max() - img.min() + 1e-8)
 
-        print(np.load(img_path).shape)
-        
+        # print(np.load(img_path).shape)
+
         # resize
         img = cv2.resize(img, self.target_size, interpolation=cv2.INTER_LINEAR)
         msk = cv2.resize(msk, self.target_size, interpolation=cv2.INTER_NEAREST)
