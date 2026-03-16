@@ -181,7 +181,8 @@ class Dataset(Dataset):
         def stems(d):
             return {os.path.splitext(f)[0]: f
                     for f in os.listdir(d)
-                    if f.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff"))}
+                    if f.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff", ".npy"))}
+                    # if f.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff", ".npy"))
 
         imgs = stems(img_dir)
         msks = stems(msk_dir)
@@ -213,34 +214,63 @@ class Dataset(Dataset):
     def __getitem__(self, idx):
         img_path, msk_path = self.pairs[idx]
 
-        # Load PIL
-        # img = Image.open(img_path).convert("RGB")
-        img = _open_image_with_tifffile(img_path)  
-        # img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        # msk = Image.open(msk_path).convert("L")
-        msk = _open_image_with_tifffile(msk_path).convert("L")
+        img = np.load(img_path).astype(np.float32)
+        msk = np.load(msk_path).astype(np.float32)
 
-        # --- RESIZE to fixed size ---
-        H, W = self.target_size
-        img = TF.resize(img, (H, W), interpolation=InterpolationMode.BILINEAR, antialias=True)
-        msk = TF.resize(msk, (H, W), interpolation=InterpolationMode.NEAREST)
+        # normalize image
+        img = (img - img.min()) / (img.max() - img.min() + 1e-8)
 
-        # To numpy, [0,1]
-        img = np.asarray(img, dtype=np.float32) / 255.0
-        msk = (np.asarray(msk, dtype=np.float32) > 127).astype(np.float32)
+        print(np.load(img_path).shape)
+        
+        # resize
+        img = cv2.resize(img, self.target_size, interpolation=cv2.INTER_LINEAR)
+        msk = cv2.resize(msk, self.target_size, interpolation=cv2.INTER_NEAREST)
 
-        # Augs (keep simple to avoid shape changes)
+        # binarize mask
+        msk = (msk > 0).astype(np.float32)
+
+        # augment
         if self.train_augs:
             if random.random() > 0.5:
-                img = np.ascontiguousarray(np.flip(img, axis=1))
-                msk = np.ascontiguousarray(np.flip(msk, axis=1))
+                img = np.flip(img, axis=1).copy()
+                msk = np.flip(msk, axis=1).copy()
 
-        # To tensors
-        img_t = torch.from_numpy(img).permute(2, 0, 1).contiguous()   # [3,H,W]
-        msk_t = torch.from_numpy(msk).unsqueeze(0).contiguous()       # [1,H,W]
+        # to tensor
+        img = torch.from_numpy(img).permute(2,0,1).float()
+        msk = torch.from_numpy(msk).unsqueeze(0).float()
 
-        img_name = os.path.basename(img_path).split('.')[0]
+        return img, msk
+    # def __getitem__(self, idx):
+    #     img_path, msk_path = self.pairs[idx]
 
-        # return img_t, msk_t , img_name
-        return img_t, msk_t
+    #     # Load PIL
+    #     # img = Image.open(img_path).convert("RGB")
+    #     img = _open_image_with_tifffile(img_path)  
+    #     # img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+    #     # msk = Image.open(msk_path).convert("L")
+    #     msk = _open_image_with_tifffile(msk_path).convert("L")
+
+    #     # --- RESIZE to fixed size ---
+    #     H, W = self.target_size
+    #     img = TF.resize(img, (H, W), interpolation=InterpolationMode.BILINEAR, antialias=True)
+    #     msk = TF.resize(msk, (H, W), interpolation=InterpolationMode.NEAREST)
+
+    #     # To numpy, [0,1]
+    #     img = np.asarray(img, dtype=np.float32) / 255.0
+    #     msk = (np.asarray(msk, dtype=np.float32) > 127).astype(np.float32)
+
+    #     # Augs (keep simple to avoid shape changes)
+    #     if self.train_augs:
+    #         if random.random() > 0.5:
+    #             img = np.ascontiguousarray(np.flip(img, axis=1))
+    #             msk = np.ascontiguousarray(np.flip(msk, axis=1))
+
+    #     # To tensors
+    #     img_t = torch.from_numpy(img).permute(2, 0, 1).contiguous()   # [3,H,W]
+    #     msk_t = torch.from_numpy(msk).unsqueeze(0).contiguous()       # [1,H,W]
+
+    #     img_name = os.path.basename(img_path).split('.')[0]
+
+    #     # return img_t, msk_t , img_name
+    #     return img_t, msk_t
 
