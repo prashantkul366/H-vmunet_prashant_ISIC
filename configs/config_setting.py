@@ -21,7 +21,9 @@ class setting_config:
 
     # datasets = 'ISIC2018'
     # datasets = 'BUSI'
-    datasets = 'CVC-ClinicDB_80_20'
+    # datasets = 'CVC-ClinicDB_80_20'
+    # datasets = 'Kvasir_80_20_Text'
+    datasets = 'Forestry'
     
     if datasets == 'ISIC2018':
         data_path = '/content/drive/MyDrive/Amit-Paper3/UNeXt-pytorch/inputs/isic2'
@@ -31,6 +33,10 @@ class setting_config:
         data_path = '/content/drive/MyDrive/Prashant/research_datasets/CVC/CVC-ClinicDB_80_20'
     elif datasets == 'BUSI':
         data_path = '/content/drive/MyDrive/Prashant/research_datasets/Dataset_BUSI_80_20'
+    elif datasets == 'Kvasir_80_20_Text':
+        data_path = '/content/drive/MyDrive/Prashant/research_datasets/Kvasir_80_20_TEXT_NEW'
+    elif datasets == 'Forestry':
+        data_path = '/content/drive/MyDrive/Prashant/Forestry_data/data_new/dataset_npy'
     else:
         raise Exception('datasets in not right!')
 
@@ -39,7 +45,7 @@ class setting_config:
     num_classes = 1
     input_size_h = 256
     input_size_w = 256
-    input_channels = 3
+    input_channels = 4
     distributed = False
     local_rank = -1
     num_workers = 0
@@ -47,18 +53,18 @@ class setting_config:
     world_size = None
     rank = None
     amp = False
-    batch_size = 8
-    epochs = 250
+    batch_size = 32
+    epochs = 500
 
     work_dir = 'results/' + network + '_' + datasets + '_' + datetime.now().strftime('%A_%d_%B_%Y_%Hh_%Mm_%Ss') + '/'
 
-    print_interval = 20
+    print_interval = 200
     val_interval = 1
     save_interval = 100
     threshold = 0.5
     
     save_best_metric = 'dice'   
-    early_stop_patience = 100   
+    early_stop_patience = 50   
 
 
     opt = 'AdamW'
