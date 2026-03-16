@@ -217,6 +217,10 @@ class Dataset(Dataset):
         img = np.load(img_path).astype(np.float32)
         msk = np.load(msk_path).astype(np.float32)
 
+        if img.ndim == 3 and img.shape[0] <= 10:
+            # assume CHW → convert to HWC
+            img = np.transpose(img, (1,2,0))
+            
         # normalize image
         img = (img - img.min()) / (img.max() - img.min() + 1e-8)
 
