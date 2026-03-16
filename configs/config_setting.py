@@ -8,9 +8,17 @@ class setting_config:
     the config of training setting.
     """
     network = 'H_vmunet' 
+    # model_config = {
+    #     'num_classes': 1,
+    #     'input_channels': 3,
+    #     'c_list': [8,16,32,64,128,256],
+    #     'split_att': 'fc',
+    #     'bridge': True,
+    #     'drop_path_rate':0.4
+    # }
     model_config = {
         'num_classes': 1,
-        'input_channels': 3,
+        'input_channels': 4,
         'c_list': [8,16,32,64,128,256],
         'split_att': 'fc',
         'bridge': True,
