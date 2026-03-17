@@ -60,7 +60,7 @@ class setting_config:
     seed = 42
     world_size = None
     rank = None
-    amp = True
+    amp = False
     batch_size = 32
     epochs = 500
 
