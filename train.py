@@ -83,7 +83,7 @@ def main(config):
                                 shuffle=False,
                                 pin_memory=True, 
                                 num_workers=config.num_workers,
-                                drop_last=True)
+                                drop_last=False)
     # test_dataset = isic_loader(path_Data = config.data_path, train = False, Test = True)
     test_dataset = Dataset(
                         root=config.data_path, split="val",
@@ -199,6 +199,7 @@ def main(config):
         improved = val_dice > best_dice + 1e-8
         if improved:
             best_dice = val_dice
+            min_epoch = epoch
             epochs_no_improve = 0
             torch.save(model.module.state_dict(), os.path.join(checkpoint_dir, 'best.pth'))
             print(f'Validation Dice improved to {best_dice:.4f}, saving model to {os.path.join(checkpoint_dir, "best.pth")}')

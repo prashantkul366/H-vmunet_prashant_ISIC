@@ -60,7 +60,7 @@ class setting_config:
     seed = 42
     world_size = None
     rank = None
-    amp = False
+    amp = True
     batch_size = 32
     epochs = 500
 
@@ -141,7 +141,7 @@ class setting_config:
         gamma = 0.99 #  – Multiplicative factor of learning rate decay.
         last_epoch = -1 # – The index of last epoch. Default: -1.
     elif sch == 'CosineAnnealingLR':
-        T_max = 50 # – Maximum number of iterations. Cosine function period.
+        T_max = epochs  # 50  – Maximum number of iterations. Cosine function period.
         eta_min = 0.00001 # – Minimum learning rate. Default: 0.
         last_epoch = -1 # – The index of last epoch. Default: -1.  
     elif sch == 'ReduceLROnPlateau':
