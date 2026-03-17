@@ -417,7 +417,8 @@ class H_vmunet(nn.Module):
         
         out0 = F.interpolate(self.final(out1),scale_factor=(2,2),mode ='bilinear',align_corners=True) # b, num_class, H, W
         
-        return torch.sigmoid(out0)
+        # return torch.sigmoid(out0)
+        return out0
 
 class LayerNorm(nn.Module):
     r""" LayerNorm that supports two data formats: channels_last (default) or channels_first. 

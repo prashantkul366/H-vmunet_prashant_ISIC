@@ -256,11 +256,14 @@ def save_imgs(img, msk, msk_pred, i, save_path, datasets, threshold=0.5, test_da
 class BCELoss(nn.Module):
     def __init__(self):
         super(BCELoss, self).__init__()
-        self.bceloss = nn.BCELoss()
+        # self.bceloss = nn.BCELoss()
+        self.bce = nn.BCEWithLogitsLoss()
 
     def forward(self, pred, target):
+        pred = torch.sigmoid(pred)
         size = pred.size(0)
         pred_ = pred.view(size, -1)
+        
         target_ = target.view(size, -1)
 
         return self.bceloss(pred_, target_)
